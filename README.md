@@ -5,5 +5,5 @@ members submitting books, voting on genres and books to read.
 
 ### Running
 ```shell
-deno run main.ts
+deno run src/main.ts
 ```
