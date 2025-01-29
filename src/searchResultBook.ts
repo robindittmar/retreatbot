@@ -9,16 +9,20 @@ export interface SearchResultBook {
 
 export interface Book {
     title: string;
-    description: string;
+    description: string | { type: string; value: string };
 }
 
 export async function searchBook(title: string, author?: string): Promise<any> {
-    let result = await fetch('https://openlibrary.org/search?' + new URLSearchParams({ q: title }).toString(), {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-        }
-    });
+    let result = await fetch(
+        "https://openlibrary.org/search?" +
+            new URLSearchParams({ q: title }).toString(),
+        {
+            method: "GET",
+            headers: {
+                "Accept": "application/json",
+            },
+        },
+    );
     if (result.ok) {
         return result.json();
     }
@@ -27,18 +31,18 @@ export async function searchBook(title: string, author?: string): Promise<any> {
 }
 
 export async function getBook(key: string): Promise<Book> {
-    let result = await fetch('https://openlibrary.org' + key, {
-        method: 'GET',
+    let result = await fetch("https://openlibrary.org" + key, {
+        method: "GET",
         headers: {
-            'Accept': 'application/json',
-        }
+            "Accept": "application/json",
+        },
     });
     if (result.ok) {
         return result.json();
     }
 
     return {
-        title: '',
-        description: ''
+        title: "",
+        description: "",
     };
 }
