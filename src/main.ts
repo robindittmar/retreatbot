@@ -1,10 +1,12 @@
 import "jsr:@std/dotenv/load";
 import {
     Client,
-    Collection,
     Events,
     GatewayIntentBits,
     MessageFlags,
+    REST,
+    Routes,
+    SlashCommandBuilder,
 } from "npm:discord.js";
 import { getBook, searchBook } from "./searchResultBook.ts";
 
@@ -29,20 +31,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
             content: "Pong!",
             flags: MessageFlags.Ephemeral,
         });
-    }
-});
-
-client.on(Events.MessageCreate, async (message) => {
-    if (!message.content.startsWith("!")) {
-        return;
-    }
-    if (message.author.bot) {
-        return;
-    }
-
-    if (message.content.startsWith("!book")) {
-        let parts = message.content.split(" ").slice(1).join(" ");
-        let result = await searchBook(parts);
+    } else if (interaction.commandName === "book") {
+        const opt = interaction.options.get("query");
+        let result = await searchBook(opt?.value?.toString() || "");
         let b = await getBook(result.docs[0].key);
 
         let description: string = "";
@@ -52,8 +43,42 @@ client.on(Events.MessageCreate, async (message) => {
             description = b.description.value;
         }
 
-        await message.reply("```" + description + "```");
+        await interaction.reply("```" + description + "```");
     }
 });
+
+const token = Deno.env.get("DISCORD_TOKEN") || "";
+const clientId = Deno.env.get("DISCORD_CLIENT_ID") || "";
+
+const rest = new REST().setToken(token);
+
+(async () => {
+    try {
+        console.log("Refreshing commands");
+
+        const data = await rest.put(
+            Routes.applicationCommands(clientId),
+            {
+                body: [
+                    new SlashCommandBuilder().setName("ping").setDescription(
+                        "Replies with Pong!",
+                    ).toJSON(),
+                    new SlashCommandBuilder().setName("book").setDescription(
+                        "Search for book",
+                    ).addStringOption((opt) =>
+                        opt
+                            .setName("query")
+                            .setRequired(true)
+                            .setDescription(
+                                "Search query to pass to openlibrary.org",
+                            )
+                    ).toJSON(),
+                ],
+            },
+        );
+    } catch (error) {
+        console.error(error);
+    }
+})();
 
 client.login(Deno.env.get("DISCORD_TOKEN"));
