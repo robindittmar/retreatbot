@@ -8,7 +8,8 @@ import {
     Routes,
     SlashCommandBuilder,
 } from "npm:discord.js";
-import { getBook, searchBook } from "./searchResultBook.ts";
+import {AppDataSource} from "./core/database.ts";
+import {getBook, searchBook} from "./searchResultBook.ts";
 
 const client = new Client({
     intents: [
@@ -54,6 +55,9 @@ const rest = new REST().setToken(token);
 
 (async () => {
     try {
+        console.log("Connecting to database");
+        await AppDataSource.initialize();
+
         console.log("Refreshing commands");
 
         const data = await rest.put(
